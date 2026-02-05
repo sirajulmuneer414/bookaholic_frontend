@@ -1,0 +1,227 @@
+.borrow-records {
+    min-height: 100vh;
+    background: var(--color-gray-50);
+}
+
+.records-content {
+    padding: var(--spacing-2xl) 0;
+}
+
+.records-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-xl);
+    flex-wrap: wrap;
+    gap: var(--spacing-lg);
+}
+
+.records-title {
+    font-size: var(--font-size-3xl);
+    margin-bottom: var(--spacing-xs);
+}
+
+.records-subtitle {
+    color: var(--color-gray-600);
+    font-size: var(--font-size-lg);
+}
+
+.records-count {
+    text-align: right;
+}
+
+.count-number {
+    display: block;
+    font-size: var(--font-size-3xl);
+    font-weight: 700;
+    color: var(--color-primary);
+    line-height: 1;
+}
+
+.count-label {
+    display: block;
+    font-size: var(--font-size-sm);
+    color: var(--color-gray-600);
+    margin-top: var(--spacing-xs);
+}
+
+/* Filters */
+.filters-card {
+    padding: var(--spacing-lg);
+}
+
+.filters-row {
+    display: flex;
+    gap: var(--spacing-lg);
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.search-container {
+    flex: 1;
+    min-width: 300px;
+}
+
+.search-input {
+    width: 100%;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border: 2px solid var(--color-gray-200);
+    border-radius: var(--radius-md);
+    font-size: var(--font-size-base);
+    transition: all var(--transition-fast);
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+.status-filters {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.filter-btn {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    border: 2px solid var(--color-gray-200);
+    border-radius: var(--radius-md);
+    background: var(--color-white);
+    color: var(--color-gray-700);
+    font-weight: 500;
+    font-size: var(--font-size-sm);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.filter-btn:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.filter-btn.active {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: var(--color-white);
+}
+
+/* Table */
+.records-table-container {
+    background: var(--color-white);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+}
+
+.records-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.records-table thead {
+    background: var(--color-gray-100);
+}
+
+.records-table th {
+    padding: var(--spacing-md) var(--spacing-lg);
+    text-align: left;
+    font-weight: 600;
+    color: var(--color-gray-700);
+    font-size: var(--font-size-sm);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.records-table td {
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-top: 1px solid var(--color-gray-200);
+    color: var(--color-gray-700);
+    font-size: var(--font-size-sm);
+}
+
+.records-table tbody tr {
+    transition: background var(--transition-fast);
+}
+
+.records-table tbody tr:hover {
+    background: var(--color-gray-50);
+}
+
+/* Modal */
+.modal-record-info {
+    background: var(--color-gray-50);
+    padding: var(--spacing-lg);
+    border-radius: var(--radius-md);
+}
+
+.modal-record-info p {
+    margin-bottom: var(--spacing-sm);
+    color: var(--color-gray-700);
+}
+
+.modal-record-info p:last-child {
+    margin-bottom: 0;
+}
+
+.status-buttons {
+    display: flex;
+    gap: var(--spacing-md);
+    flex-wrap: wrap;
+}
+
+.status-buttons button {
+    flex: 1;
+    min-width: 150px;
+}
+
+/* Empty State */
+.empty-icon {
+    font-size: 5rem;
+    margin-bottom: var(--spacing-lg);
+}
+
+.empty-title {
+    font-size: var(--font-size-xl);
+    color: var(--color-gray-900);
+    margin-bottom: var(--spacing-sm);
+}
+
+.empty-text {
+    color: var(--color-gray-600);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .filters-row {
+        flex-direction: column;
+    }
+
+    .search-container {
+        width: 100%;
+    }
+
+    .status-filters {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+    .filter-btn {
+        flex: 1;
+    }
+
+    .records-table-container {
+        overflow-x: auto;
+    }
+
+    .records-table {
+        min-width: 800px;
+    }
+
+    .records-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .records-count {
+        text-align: left;
+    }
+}

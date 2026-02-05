@@ -1,30 +1,44 @@
 import { createContext, useState, useEffect } from "react";
 import { jwtDecode } from "jwt-decode";
-import { useNavigate } from "react-router-dom";
 
 export const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
     const [user, setUser] = useState(null);
     const [token, setToken] = useState(localStorage.getItem("token"));
-    // We can't use useNavigate here directly if this component wraps Router, 
-    // but usually, we structure it so we can, or we handle redirects in components.
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         if (token) {
             try {
                 const decoded = jwtDecode(token);
-                // The JWT usually has "sub" (email) and "roles" or "authorities"
-                // Let's assume our backend sends roles nicely, or we check the decoded object structure
+
+                // Extract role from JWT - backend sends it in authorities array
+                let role = "USER";
+                if (decoded.authorities) {
+                    // authorities is usually an array like ["ROLE_USER"] or ["ROLE_ADMIN"]
+                    const authorities = Array.isArray(decoded.authorities)
+                        ? decoded.authorities
+                        : [decoded.authorities];
+
+                    if (authorities.some(auth => auth === 'ROLE_ADMIN' || auth === 'ADMIN')) {
+                        role = 'ADMIN';
+                    }
+                } else if (decoded.role) {
+                    // If role is directly in the token
+                    role = decoded.role;
+                }
+
                 setUser({
                     email: decoded.sub,
-                    // Check how your backend sends roles. It might be decoded.role or decoded.authorities
-                    role: decoded.role || "USER" 
+                    role: role
                 });
             } catch (error) {
+                console.error("Invalid token:", error);
                 logout();
             }
         }
+        setLoading(false);
     }, [token]);
 
     const login = (newToken) => {
@@ -38,8 +52,16 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
     };
 
+    const isAdmin = () => {
+        return user?.role === 'ADMIN';
+    };
+
+    const isUser = () => {
+        return user?.role === 'USER';
+    };
+
     return (
-        <AuthContext.Provider value={{ user, login, logout, token }}>
+        <AuthContext.Provider value={{ user, login, logout, token, loading, isAdmin, isUser }}>
             {children}
         </AuthContext.Provider>
     );
