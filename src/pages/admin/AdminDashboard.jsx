@@ -132,11 +132,11 @@ const AdminDashboard = () => {
                                 </div>
                             </Card>
 
-                            <Card className="action-card" hover>
+                            <Card className="action-card" hover onClick={() => navigate('/admin/users')}>
                                 <div className="action-content">
-                                    <div className="action-icon">📊</div>
-                                    <h3 className="action-title">Statistics</h3>
-                                    <p className="action-description">View detailed library analytics</p>
+                                    <div className="action-icon">👥</div>
+                                    <h3 className="action-title">Manage Users</h3>
+                                    <p className="action-description">View and manage library members</p>
                                 </div>
                             </Card>
                         </div>

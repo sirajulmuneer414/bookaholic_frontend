@@ -23,6 +23,8 @@ const MyBooks = lazy(() => import('./pages/user/MyBooks'));
 const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard'));
 const ManageBooks = lazy(() => import('./pages/admin/ManageBooks'));
 const BorrowRecords = lazy(() => import('./pages/admin/BorrowRecords'));
+const ManageUsers = lazy(() => import('./pages/admin/ManageUsers'));
+const UserDetails = lazy(() => import('./pages/admin/UserDetails'));
 
 // Loading component
 const LoadingFallback = () => (
@@ -139,6 +141,22 @@ function App() {
               element={
                 <ProtectedRoute requiredRole="ADMIN">
                   <BorrowRecords />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/users"
+              element={
+                <ProtectedRoute requiredRole="ADMIN">
+                  <ManageUsers />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/users/:id"
+              element={
+                <ProtectedRoute requiredRole="ADMIN">
+                  <UserDetails />
                 </ProtectedRoute>
               }
             />
