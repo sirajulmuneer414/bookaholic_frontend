@@ -45,6 +45,7 @@
     display: flex;
     align-items: center;
     gap: var(--spacing-lg);
+    flex-wrap: nowrap;
 }
 
 .nav-link {
@@ -56,6 +57,7 @@
     border-radius: var(--radius-md);
     transition: all var(--transition-fast);
     position: relative;
+    white-space: nowrap;
 }
 
 .nav-link:hover {
