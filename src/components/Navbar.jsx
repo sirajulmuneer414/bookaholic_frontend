@@ -41,6 +41,12 @@ const Navbar = () => {
                                         Manage Books
                                     </Link>
                                     <Link
+                                        to="/admin/users"
+                                        className={`nav-link ${isActive('/admin/users') ? 'active' : ''}`}
+                                    >
+                                        Manage Users
+                                    </Link>
+                                    <Link
                                         to="/admin/records"
                                         className={`nav-link ${isActive('/admin/records') ? 'active' : ''}`}
                                     >

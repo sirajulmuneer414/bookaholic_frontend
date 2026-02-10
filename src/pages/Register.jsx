@@ -228,6 +228,7 @@ const Register = () => {
                                 placeholder="Enter admin secret code"
                                 error={errors.adminCode}
                                 required
+                                showPasswordToggle={true}
                             />
                         )}
 
@@ -240,6 +241,7 @@ const Register = () => {
                             placeholder="At least 6 characters"
                             error={errors.password}
                             required
+                            showPasswordToggle={true}
                         />
 
                         <Input
@@ -251,6 +253,7 @@ const Register = () => {
                             placeholder="Re-enter your password"
                             error={errors.confirmPassword}
                             required
+                            showPasswordToggle={true}
                         />
 
                         <Button

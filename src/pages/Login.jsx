@@ -113,6 +113,7 @@ const Login = () => {
                             placeholder="Enter your password"
                             error={errors.password}
                             required
+                            showPasswordToggle={true}
                         />
 
                         <div style={{ textAlign: 'right', marginTop: '-0.5rem', marginBottom: '1rem' }}>

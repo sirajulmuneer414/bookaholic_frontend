@@ -6,6 +6,7 @@ import Navbar from '../../components/Navbar';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import Modal from '../../components/Modal';
+import Pagination from '../../components/Pagination';
 import './UserDetails.css';
 
 const UserDetails = () => {
@@ -25,19 +26,23 @@ const UserDetails = () => {
     const [selectedRecord, setSelectedRecord] = useState(null);
     const [editRecordData, setEditRecordData] = useState({ status: '', dueDate: '' });
     const [updatingRecord, setUpdatingRecord] = useState(false);
+    const [currentPage, setCurrentPage] = useState(0);
+    const [paginationData, setPaginationData] = useState(null);
 
     useEffect(() => {
         fetchUserData();
-    }, [id]);
+    }, [id, currentPage]);
 
     const fetchUserData = async () => {
+        setLoading(true);
         try {
             const [userData, recordsData] = await Promise.all([
                 getUserById(id),
-                getUserBorrowRecords(id)
+                getUserBorrowRecords(id, currentPage, 10)
             ]);
             setUser(userData);
-            setRecords(recordsData.sort((a, b) => new Date(b.borrowDate) - new Date(a.borrowDate)));
+            setPaginationData(recordsData);
+            setRecords(recordsData.content.sort((a, b) => new Date(b.borrowDate) - new Date(a.borrowDate)));
         } catch (error) {
             console.error('Error fetching user data:', error);
             toast.error('Failed to load user data');
@@ -45,6 +50,10 @@ const UserDetails = () => {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handlePageChange = (newPage) => {
+        setCurrentPage(newPage);
     };
 
     // User Edit Handlers
@@ -224,6 +233,17 @@ const UserDetails = () => {
                                 <h3 className="empty-title">No borrow history</h3>
                                 <p className="empty-text">This user hasn't borrowed any books yet</p>
                             </Card>
+                        )}
+
+                        {/* Pagination */}
+                        {paginationData && paginationData.totalPages > 1 && (
+                            <Pagination
+                                currentPage={paginationData.currentPage}
+                                totalPages={paginationData.totalPages}
+                                hasNext={paginationData.hasNext}
+                                hasPrevious={paginationData.hasPrevious}
+                                onPageChange={handlePageChange}
+                            />
                         )}
                     </div>
                 </div>

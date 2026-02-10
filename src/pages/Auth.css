@@ -262,6 +262,50 @@
     }
 }
 
+/* Password Toggle Button */
+.input-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-wrapper .input-field {
+    padding-right: 3rem;
+    /* Make space for the toggle button */
+}
+
+.password-toggle-btn {
+    position: absolute;
+    right: 0.75rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--color-gray-500);
+    transition: color var(--transition-fast);
+    outline: none;
+}
+
+.password-toggle-btn:hover {
+    color: var(--color-primary);
+}
+
+.password-toggle-btn:focus {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: var(--radius-sm);
+}
+
+.password-toggle-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
 
 /* Responsive */
 @media (max-width: 480px) {

@@ -2,8 +2,8 @@ import { useContext } from 'react';
 import { Navigate } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 
-const ProtectedRoute = ({ children, requiredRole }) => {
-    const { user, token, loading } = useContext(AuthContext);
+const PublicRoute = ({ children }) => {
+    const { user, loading } = useContext(AuthContext);
 
     // Wait for auth to load before making decisions
     if (loading) {
@@ -20,19 +20,8 @@ const ProtectedRoute = ({ children, requiredRole }) => {
         );
     }
 
-    // If no token, redirect to login
-    if (!token) {
-        return <Navigate to="/login" replace />;
-    }
-
-    // If no user (token is invalid), redirect to login
-    if (!user) {
-        return <Navigate to="/login" replace />;
-    }
-
-    // If requiredRole is specified and user doesn't have it
-    if (requiredRole && user.role !== requiredRole) {
-        // Redirect based on actual role
+    // If user is logged in, redirect to their dashboard
+    if (user) {
         if (user.role === 'ADMIN') {
             return <Navigate to="/admin/dashboard" replace />;
         } else {
@@ -40,7 +29,8 @@ const ProtectedRoute = ({ children, requiredRole }) => {
         }
     }
 
+    // User is not logged in, show the public page
     return children;
 };
 
-export default ProtectedRoute;
+export default PublicRoute;

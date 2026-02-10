@@ -20,4 +20,17 @@ api.interceptors.request.use(
     }
 );
 
+// Response Interceptor: Handle 401 Unauthorized (expired/invalid token)
+api.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response && error.response.status === 401) {
+            // Clear token from localStorage
+            // The AuthContext will pick this up and update state
+            localStorage.removeItem('token');
+        }
+        return Promise.reject(error);
+    }
+);
+
 export default api;

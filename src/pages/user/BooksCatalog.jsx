@@ -4,28 +4,48 @@ import { getAllBooks } from '../../services/bookService';
 import { toast } from 'react-toastify';
 import Navbar from '../../components/Navbar';
 import Card from '../../components/Card';
+import Pagination from '../../components/Pagination';
 import './BooksCatalog.css';
 
 const BooksCatalog = () => {
     const [books, setBooks] = useState([]);
-    const [filteredBooks, setFilteredBooks] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [loading, setLoading] = useState(true);
+    const [currentPage, setCurrentPage] = useState(0);
+    const [paginationData, setPaginationData] = useState(null);
     const navigate = useNavigate();
 
     useEffect(() => {
-        fetchBooks();
-    }, []);
+        fetchBooks(currentPage);
+    }, [currentPage]);
 
+    // Reset to first page when search changes
     useEffect(() => {
-        filterBooks();
-    }, [searchTerm, books]);
+        if (currentPage === 0) {
+            fetchBooks(0);
+        } else {
+            setCurrentPage(0);
+        }
+    }, [searchTerm]);
 
-    const fetchBooks = async () => {
+    const fetchBooks = async (page) => {
+        setLoading(true);
         try {
-            const data = await getAllBooks();
-            setBooks(data);
-            setFilteredBooks(data);
+            // For now, we fetch all and filter client-side for search
+            // In production, you'd want server-side search
+            const data = await getAllBooks(page, 10);
+            setPaginationData(data);
+
+            // Apply client-side search filter if search term exists
+            let filteredContent = data.content;
+            if (searchTerm) {
+                filteredContent = data.content.filter(book =>
+                    book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    book.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    book.isbn.toLowerCase().includes(searchTerm.toLowerCase())
+                );
+            }
+            setBooks(filteredContent);
         } catch (error) {
             console.error('Error fetching books:', error);
             toast.error('Failed to load books');
@@ -34,18 +54,8 @@ const BooksCatalog = () => {
         }
     };
 
-    const filterBooks = () => {
-        if (!searchTerm) {
-            setFilteredBooks(books);
-            return;
-        }
-
-        const filtered = books.filter(book =>
-            book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            book.author.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            book.isbn.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-        setFilteredBooks(filtered);
+    const handlePageChange = (newPage) => {
+        setCurrentPage(newPage);
     };
 
     const handleBookClick = (bookId) => {
@@ -65,7 +75,7 @@ const BooksCatalog = () => {
                             <p className="catalog-subtitle">Explore our extensive collection</p>
                         </div>
                         <div className="books-count">
-                            <span className="count-number">{filteredBooks.length}</span>
+                            <span className="count-number">{paginationData?.totalElements || 0}</span>
                             <span className="count-label">Books Available</span>
                         </div>
                     </div>
@@ -88,9 +98,9 @@ const BooksCatalog = () => {
                             <div className="spinner spinner-primary"></div>
                             <p className="mt-md text-gray-600">Loading books...</p>
                         </div>
-                    ) : filteredBooks.length > 0 ? (
+                    ) : books.length > 0 ? (
                         <div className="books-grid grid grid-cols-4 gap-lg">
-                            {filteredBooks.map(book => (
+                            {books.map(book => (
                                 <Card
                                     key={book.id}
                                     className="book-card"
@@ -133,6 +143,17 @@ const BooksCatalog = () => {
                                 </p>
                             </div>
                         </Card>
+                    )}
+
+                    {/* Pagination Controls */}
+                    {paginationData && paginationData.totalPages > 1 && (
+                        <Pagination
+                            currentPage={paginationData.currentPage}
+                            totalPages={paginationData.totalPages}
+                            hasNext={paginationData.hasNext}
+                            hasPrevious={paginationData.hasPrevious}
+                            onPageChange={handlePageChange}
+                        />
                     )}
                 </div>
             </div>

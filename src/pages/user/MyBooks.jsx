@@ -1,39 +1,73 @@
 import { useState, useEffect } from 'react';
-import { getMyHistory, returnBook } from '../../services/borrowService';
+import { getMyHistory, getMyHistoryUnpaginated, returnBook } from '../../services/borrowService';
 import { toast } from 'react-toastify';
 import Navbar from '../../components/Navbar';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
+import Pagination from '../../components/Pagination';
 import './MyBooks.css';
 
 const MyBooks = () => {
     const [borrowedBooks, setBorrowedBooks] = useState([]);
     const [returnedBooks, setReturnedBooks] = useState([]);
-    const [loading, setLoading] = useState(true);
+    const [borrowedLoading, setBorrowedLoading] = useState(true);
+    const [returnedLoading, setReturnedLoading] = useState(true);
     const [returningId, setReturningId] = useState(null);
+    const [currentPage, setCurrentPage] = useState(0);
+    const [paginationData, setPaginationData] = useState(null);
 
+    // Fetch borrowed books on mount (no pagination, max 3 books)
     useEffect(() => {
-        fetchMyBooks();
+        fetchBorrowedBooks();
     }, []);
 
-    const fetchMyBooks = async () => {
+    // Fetch returned books when page changes
+    useEffect(() => {
+        fetchReturnedBooks(currentPage);
+    }, [currentPage]);
+
+    const fetchBorrowedBooks = async () => {
+        setBorrowedLoading(true);
         try {
-            const history = await getMyHistory();
-            const borrowed = history.filter(record => record.status === 'BORROWED');
-            const returned = history.filter(record => record.status === 'RETURNED');
+            // Use unpaginated endpoint and filter for BORROWED status
+            const allRecords = await getMyHistoryUnpaginated();
+            const borrowed = allRecords.filter(record => record.status === 'BORROWED');
 
             // Sort borrowed books by due date (earliest first)
             borrowed.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
-            returned.sort((a, b) => new Date(b.returnDate) - new Date(a.returnDate));
 
             setBorrowedBooks(borrowed);
+        } catch (error) {
+            console.error('Error fetching borrowed books:', error);
+            toast.error('Failed to load borrowed books');
+        } finally {
+            setBorrowedLoading(false);
+        }
+    };
+
+    const fetchReturnedBooks = async (page) => {
+        setReturnedLoading(true);
+        try {
+            // Use paginated endpoint with status filter for RETURNED
+            const data = await getMyHistory(page, 10, 'RETURNED');
+            setPaginationData(data);
+
+            // Sort returned books by return date (most recent first)
+            const returned = data.content.sort((a, b) =>
+                new Date(b.returnDate) - new Date(a.returnDate)
+            );
+
             setReturnedBooks(returned);
         } catch (error) {
-            console.error('Error fetching books:', error);
-            toast.error('Failed to load your books');
+            console.error('Error fetching returned books:', error);
+            toast.error('Failed to load borrowing history');
         } finally {
-            setLoading(false);
+            setReturnedLoading(false);
         }
+    };
+
+    const handlePageChange = (newPage) => {
+        setCurrentPage(newPage);
     };
 
     const handleReturn = async (recordId) => {
@@ -41,7 +75,11 @@ const MyBooks = () => {
         try {
             await returnBook(recordId);
             toast.success('Book returned successfully!');
-            await fetchMyBooks(); // Refresh the lists
+            // Refresh both lists - borrowed books will decrease, returned will increase
+            await Promise.all([
+                fetchBorrowedBooks(),
+                fetchReturnedBooks(currentPage)
+            ]);
         } catch (error) {
             console.error('Error returning book:', error);
             toast.error(error.response?.data?.message || 'Failed to return book');
@@ -81,7 +119,8 @@ const MyBooks = () => {
         return `${daysLeft} days left`;
     };
 
-    if (loading) {
+    // Show loading spinner only on initial page load when both are loading
+    if (borrowedLoading && returnedLoading) {
         return (
             <div className="my-books">
                 <Navbar />
@@ -112,7 +151,11 @@ const MyBooks = () => {
                             Currently Borrowed ({borrowedBooks.length})
                         </h2>
 
-                        {borrowedBooks.length > 0 ? (
+                        {borrowedLoading ? (
+                            <div className="loading-container" style={{ padding: '2rem' }}>
+                                <div className="spinner spinner-primary"></div>
+                            </div>
+                        ) : borrowedBooks.length > 0 ? (
                             <div className="books-list">
                                 {borrowedBooks.map(record => {
                                     const dueStatus = getDueStatus(record.dueDate);
@@ -165,10 +208,14 @@ const MyBooks = () => {
                     {/* Borrowing History */}
                     <section className="section-history">
                         <h2 className="section-title mb-lg">
-                            Borrowing History ({returnedBooks.length})
+                            Borrowing History ({paginationData?.totalElements || 0})
                         </h2>
 
-                        {returnedBooks.length > 0 ? (
+                        {returnedLoading ? (
+                            <div className="loading-container" style={{ padding: '2rem' }}>
+                                <div className="spinner spinner-primary"></div>
+                            </div>
+                        ) : returnedBooks.length > 0 ? (
                             <div className="books-list">
                                 {returnedBooks.map(record => (
                                     <Card key={record.id} className="book-item history-item">
@@ -202,6 +249,17 @@ const MyBooks = () => {
                             </Card>
                         )}
                     </section>
+
+                    {/* Pagination */}
+                    {paginationData && paginationData.totalPages > 1 && (
+                        <Pagination
+                            currentPage={paginationData.currentPage}
+                            totalPages={paginationData.totalPages}
+                            hasNext={paginationData.hasNext}
+                            hasPrevious={paginationData.hasPrevious}
+                            onPageChange={handlePageChange}
+                        />
+                    )}
                 </div>
             </div>
         </div>

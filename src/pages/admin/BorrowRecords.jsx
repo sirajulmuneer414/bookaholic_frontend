@@ -1,36 +1,72 @@
 import { useState, useEffect } from 'react';
-import { getAllHistory, adminOverrideStatus } from '../../services/borrowService';
+import { getAllHistory, adminOverrideStatus, getTotalRecordCount } from '../../services/borrowService';
 import { toast } from 'react-toastify';
 import Navbar from '../../components/Navbar';
 import Card from '../../components/Card';
 import Button from '../../components/Button';
 import Modal from '../../components/Modal';
+import Pagination from '../../components/Pagination';
 import './BorrowRecords.css';
 
 const BorrowRecords = () => {
     const [records, setRecords] = useState([]);
-    const [filteredRecords, setFilteredRecords] = useState([]);
+    const [totalCount, setTotalCount] = useState(0);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterStatus, setFilterStatus] = useState('ALL');
     const [loading, setLoading] = useState(true);
     const [selectedRecord, setSelectedRecord] = useState(null);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [updating, setUpdating] = useState(false);
+    const [currentPage, setCurrentPage] = useState(0);
+    const [paginationData, setPaginationData] = useState(null);
 
+    // Fetch total count on mount
     useEffect(() => {
-        fetchRecords();
+        fetchTotalCount();
     }, []);
 
     useEffect(() => {
-        applyFilters();
-    }, [searchTerm, filterStatus, records]);
+        fetchRecords(currentPage);
+    }, [currentPage, filterStatus]);
 
-    const fetchRecords = async () => {
+    useEffect(() => {
+        // Reset to page 0 when search term changes
+        if (currentPage === 0) {
+            fetchRecords(0);
+        } else {
+            setCurrentPage(0);
+        }
+    }, [searchTerm]);
+
+    const fetchTotalCount = async () => {
         try {
-            const data = await getAllHistory();
-            // Sort by borrow date (most recent first)
-            data.sort((a, b) => new Date(b.borrowDate) - new Date(a.borrowDate));
-            setRecords(data);
+            const count = await getTotalRecordCount();
+            setTotalCount(count);
+        } catch (error) {
+            console.error('Error fetching total count:', error);
+        }
+    };
+
+    const fetchRecords = async (page) => {
+        setLoading(true);
+        try {
+            // Pass status filter to backend (if not 'ALL')
+            const statusParam = filterStatus !== 'ALL' ? filterStatus : null;
+            const data = await getAllHistory(page, 10, statusParam);
+            setPaginationData(data);
+
+            // Only apply client-side search filtering (status is now handled by backend)
+            let filtered = data.content;
+
+            if (searchTerm) {
+                filtered = filtered.filter(record =>
+                    record.userEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    record.bookTitle.toLowerCase().includes(searchTerm.toLowerCase())
+                );
+            }
+
+            filtered.sort((a, b) => new Date(b.borrowDate) - new Date(a.borrowDate));
+            setRecords(filtered);
         } catch (error) {
             console.error('Error fetching records:', error);
             toast.error('Failed to load borrow records');
@@ -39,23 +75,8 @@ const BorrowRecords = () => {
         }
     };
 
-    const applyFilters = () => {
-        let filtered = [...records];
-
-        // Apply status filter
-        if (filterStatus !== 'ALL') {
-            filtered = filtered.filter(record => record.status === filterStatus);
-        }
-
-        // Apply search filter
-        if (searchTerm) {
-            filtered = filtered.filter(record =>
-                record.userEmail.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                record.bookTitle.toLowerCase().includes(searchTerm.toLowerCase())
-            );
-        }
-
-        setFilteredRecords(filtered);
+    const handlePageChange = (newPage) => {
+        setCurrentPage(newPage);
     };
 
     const handleOverride = async (newStatus) => {
@@ -65,7 +86,7 @@ const BorrowRecords = () => {
             toast.success(`Status updated to ${newStatus}`);
             setIsModalOpen(false);
             setSelectedRecord(null);
-            await fetchRecords();
+            await fetchRecords(currentPage);
         } catch (error) {
             console.error('Error updating status:', error);
             toast.error(error.response?.data?.message || 'Failed to update status');
@@ -101,8 +122,8 @@ const BorrowRecords = () => {
                             <p className="records-subtitle">Manage all borrowing activity</p>
                         </div>
                         <div className="records-count">
-                            <span className="count-number">{filteredRecords.length}</span>
-                            <span className="count-label">Records</span>
+                            <span className="count-number">{totalCount}</span>
+                            <span className="count-label">Total Records</span>
                         </div>
                     </div>
 
@@ -147,7 +168,7 @@ const BorrowRecords = () => {
                             <div className="spinner spinner-primary"></div>
                             <p className="mt-md text-gray-600">Loading records...</p>
                         </Card>
-                    ) : filteredRecords.length > 0 ? (
+                    ) : records.length > 0 ? (
                         <div className="records-table-container">
                             <table className="records-table">
                                 <thead>
@@ -163,7 +184,7 @@ const BorrowRecords = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filteredRecords.map(record => (
+                                    {records.map(record => (
                                         <tr key={record.id}>
                                             <td className="font-semibold">#{record.id}</td>
                                             <td>{record.userEmail}</td>
@@ -200,6 +221,17 @@ const BorrowRecords = () => {
                                     : 'No borrowing activity yet'}
                             </p>
                         </Card>
+                    )}
+
+                    {/* Pagination */}
+                    {paginationData && paginationData.totalPages > 1 && (
+                        <Pagination
+                            currentPage={paginationData.currentPage}
+                            totalPages={paginationData.totalPages}
+                            hasNext={paginationData.hasNext}
+                            hasPrevious={paginationData.hasPrevious}
+                            onPageChange={handlePageChange}
+                        />
                     )}
                 </div>
             </div>

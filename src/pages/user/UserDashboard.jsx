@@ -1,7 +1,7 @@
 import { useState, useEffect, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AuthContext } from '../../context/AuthContext';
-import { getMyHistory } from '../../services/borrowService';
+import { getMyHistoryUnpaginated } from '../../services/borrowService';
 import { toast } from 'react-toastify';
 import Navbar from '../../components/Navbar';
 import Card from '../../components/Card';
@@ -25,7 +25,7 @@ const UserDashboard = () => {
 
     const fetchUserStats = async () => {
         try {
-            const history = await getMyHistory();
+            const history = await getMyHistoryUnpaginated();
             const borrowed = history.filter(record => record.status === 'BORROWED');
             const returned = history.filter(record => record.status === 'RETURNED');
 

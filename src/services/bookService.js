@@ -1,8 +1,16 @@
 import api from './api';
 
-// Get all books (public/user)
-export const getAllBooks = async () => {
-    const response = await api.get('/books');
+// Get all books - Paginated (public/user)
+export const getAllBooks = async (page = 0, size = 10) => {
+    const response = await api.get('/books', {
+        params: { page, size }
+    });
+    return response.data;
+};
+
+// Get all books - Unpaginated (for dashboard stats)
+export const getAllBooksUnpaginated = async () => {
+    const response = await api.get('/books/all');
     return response.data;
 };
 

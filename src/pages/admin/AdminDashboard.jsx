@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAllBooks } from '../../services/bookService';
-import { getAllHistory } from '../../services/borrowService';
+import { getAllBooksUnpaginated } from '../../services/bookService';
+import { getAllHistoryUnpaginated } from '../../services/borrowService';
 import { toast } from 'react-toastify';
 import Navbar from '../../components/Navbar';
 import Card from '../../components/Card';
@@ -25,8 +25,8 @@ const AdminDashboard = () => {
     const fetchDashboardData = async () => {
         try {
             const [booksData, historyData] = await Promise.all([
-                getAllBooks(),
-                getAllHistory()
+                getAllBooksUnpaginated(),
+                getAllHistoryUnpaginated()
             ]);
 
             // Calculate stats

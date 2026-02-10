@@ -1,31 +1,68 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAllUsers } from '../../services/userService';
+import { getAllUsers, getTotalUserCount } from '../../services/userService';
 import { toast } from 'react-toastify';
 import Navbar from '../../components/Navbar';
 import Card from '../../components/Card';
+import Pagination from '../../components/Pagination';
 import './ManageUsers.css';
 
 const ManageUsers = () => {
     const navigate = useNavigate();
     const [users, setUsers] = useState([]);
-    const [filteredUsers, setFilteredUsers] = useState([]);
+    const [totalCount, setTotalCount] = useState(0);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterRole, setFilterRole] = useState('ALL');
     const [loading, setLoading] = useState(true);
+    const [currentPage, setCurrentPage] = useState(0);
+    const [paginationData, setPaginationData] = useState(null);
 
+    // Fetch total count on mount
     useEffect(() => {
-        fetchUsers();
+        fetchTotalCount();
     }, []);
 
     useEffect(() => {
-        applyFilters();
-    }, [searchTerm, filterRole, users]);
+        fetchUsers(currentPage);
+    }, [currentPage, filterRole]);
 
-    const fetchUsers = async () => {
+    // Reset to page 0 when filters change
+    useEffect(() => {
+        if (currentPage === 0) {
+            fetchUsers(0);
+        } else {
+            setCurrentPage(0);
+        }
+    }, [searchTerm]);
+
+    const fetchTotalCount = async () => {
         try {
-            const data = await getAllUsers();
-            setUsers(data);
+            const count = await getTotalUserCount();
+            setTotalCount(count);
+        } catch (error) {
+            console.error('Error fetching total count:', error);
+        }
+    };
+
+    const fetchUsers = async (page) => {
+        setLoading(true);
+        try {
+            // Pass role filter to backend (if not 'ALL')
+            const roleParam = filterRole !== 'ALL' ? filterRole : null;
+            const data = await getAllUsers(page, 10, roleParam);
+            setPaginationData(data);
+
+            // Only apply client-side search filtering (role is now handled by backend)
+            let filtered = data.content;
+
+            if (searchTerm) {
+                filtered = filtered.filter(user =>
+                    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    (user.fullName && user.fullName.toLowerCase().includes(searchTerm.toLowerCase()))
+                );
+            }
+
+            setUsers(filtered);
         } catch (error) {
             console.error('Error fetching users:', error);
             toast.error('Failed to load users');
@@ -34,23 +71,8 @@ const ManageUsers = () => {
         }
     };
 
-    const applyFilters = () => {
-        let filtered = [...users];
-
-        // Apply role filter
-        if (filterRole !== 'ALL') {
-            filtered = filtered.filter(user => user.role === filterRole);
-        }
-
-        // Apply search filter
-        if (searchTerm) {
-            filtered = filtered.filter(user =>
-                user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                (user.fullName && user.fullName.toLowerCase().includes(searchTerm.toLowerCase()))
-            );
-        }
-
-        setFilteredUsers(filtered);
+    const handlePageChange = (newPage) => {
+        setCurrentPage(newPage);
     };
 
     const handleRowClick = (userId) => {
@@ -70,8 +92,8 @@ const ManageUsers = () => {
                             <p className="users-subtitle">View and manage library members</p>
                         </div>
                         <div className="users-count">
-                            <span className="count-number">{filteredUsers.length}</span>
-                            <span className="count-label">Users</span>
+                            <span className="count-number">{totalCount}</span>
+                            <span className="count-label">Total Users</span>
                         </div>
                     </div>
 
@@ -116,7 +138,7 @@ const ManageUsers = () => {
                             <div className="spinner spinner-primary"></div>
                             <p className="mt-md text-gray-600">Loading users...</p>
                         </Card>
-                    ) : filteredUsers.length > 0 ? (
+                    ) : users.length > 0 ? (
                         <div className="users-table-container">
                             <table className="users-table">
                                 <thead>
@@ -131,7 +153,7 @@ const ManageUsers = () => {
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    {filteredUsers.map(user => (
+                                    {users.map(user => (
                                         <tr
                                             key={user.id}
                                             onClick={() => handleRowClick(user.id)}
@@ -167,6 +189,17 @@ const ManageUsers = () => {
                                     : 'No registered users yet'}
                             </p>
                         </Card>
+                    )}
+
+                    {/* Pagination */}
+                    {paginationData && paginationData.totalPages > 1 && (
+                        <Pagination
+                            currentPage={paginationData.currentPage}
+                            totalPages={paginationData.totalPages}
+                            hasNext={paginationData.hasNext}
+                            hasPrevious={paginationData.hasPrevious}
+                            onPageChange={handlePageChange}
+                        />
                     )}
                 </div>
             </div>

@@ -1,8 +1,18 @@
 import api from './api';
 
-// ADMIN: Get all users
-export const getAllUsers = async () => {
-    const response = await api.get('/admin/users');
+// ADMIN: Get all users - Paginated
+export const getAllUsers = async (page = 0, size = 10, role = null) => {
+    const params = { page, size };
+    if (role) {
+        params.role = role;
+    }
+    const response = await api.get('/admin/users', { params });
+    return response.data;
+};
+
+// ADMIN: Get total count of all users
+export const getTotalUserCount = async () => {
+    const response = await api.get('/admin/users/count');
     return response.data;
 };
 
@@ -18,9 +28,11 @@ export const updateUser = async (userId, data) => {
     return response.data;
 };
 
-// ADMIN: Get user's borrow records
-export const getUserBorrowRecords = async (userId) => {
-    const response = await api.get(`/admin/users/${userId}/records`);
+// ADMIN: Get user's borrow records - Paginated
+export const getUserBorrowRecords = async (userId, page = 0, size = 10) => {
+    const response = await api.get(`/admin/users/${userId}/records`, {
+        params: { page, size }
+    });
     return response.data;
 };
 

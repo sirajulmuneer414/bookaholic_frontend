@@ -105,6 +105,7 @@ const ResetPassword = () => {
                             placeholder="At least 6 characters"
                             error={errors.newPassword}
                             required
+                            showPasswordToggle={true}
                         />
 
                         <Input
@@ -116,6 +117,7 @@ const ResetPassword = () => {
                             placeholder="Re-enter your new password"
                             error={errors.confirmPassword}
                             required
+                            showPasswordToggle={true}
                         />
 
                         <Button

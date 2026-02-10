@@ -6,6 +6,7 @@ import Card from '../../components/Card';
 import Button from '../../components/Button';
 import Input from '../../components/Input';
 import Modal from '../../components/Modal';
+import Pagination from '../../components/Pagination';
 import './ManageBooks.css';
 
 const ManageBooks = () => {
@@ -14,6 +15,8 @@ const ManageBooks = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [submitting, setSubmitting] = useState(false);
     const [editingBook, setEditingBook] = useState(null); // Track which book we're editing
+    const [currentPage, setCurrentPage] = useState(0);
+    const [paginationData, setPaginationData] = useState(null);
     const [formData, setFormData] = useState({
         title: '',
         author: '',
@@ -24,19 +27,25 @@ const ManageBooks = () => {
     const [errors, setErrors] = useState({});
 
     useEffect(() => {
-        fetchBooks();
-    }, []);
+        fetchBooks(currentPage);
+    }, [currentPage]);
 
-    const fetchBooks = async () => {
+    const fetchBooks = async (page) => {
+        setLoading(true);
         try {
-            const data = await getAllBooks();
-            setBooks(data);
+            const data = await getAllBooks(page, 10);
+            setPaginationData(data);
+            setBooks(data.content);
         } catch (error) {
             console.error('Error fetching books:', error);
             toast.error('Failed to load books');
         } finally {
             setLoading(false);
         }
+    };
+
+    const handlePageChange = (newPage) => {
+        setCurrentPage(newPage);
     };
 
     const handleChange = (e) => {
@@ -160,7 +169,6 @@ const ManageBooks = () => {
                                 <Card
                                     key={book.id}
                                     className="admin-book-card"
-                                    hover
                                     onClick={() => handleEditClick(book)}
                                 >
                                     <div className="admin-book-image">
@@ -189,7 +197,20 @@ const ManageBooks = () => {
                                 </Card>
                             ))}
                         </div>
-                    ) : (
+                    ) : null}
+
+                    {/* Books Grid - Show Pagination or Empty State */}
+                    {!loading && books.length > 0 && paginationData && paginationData.totalPages > 1 && (
+                        <Pagination
+                            currentPage={paginationData.currentPage}
+                            totalPages={paginationData.totalPages}
+                            hasNext={paginationData.hasNext}
+                            hasPrevious={paginationData.hasPrevious}
+                            onPageChange={handlePageChange}
+                        />
+                    )}
+
+                    {!loading && books.length === 0 && (
                         <Card className="text-center p-xl">
                             <div className="empty-icon">📚</div>
                             <h3 className="empty-title">No books in collection</h3>
